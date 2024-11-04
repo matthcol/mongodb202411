@@ -9,6 +9,10 @@
     - https://docs.docker.com/desktop/install/windows-install/
     
 ## Connection
+- https://www.mongodb.com/docs/mongodb-shell/connect/
+- https://www.mongodb.com/docs/manual/reference/connection-string/
+- https://www.mongodb.com/docs/manual/reference/connection-string-options/
+
 ### Compass
 URL = mongodb://root:password@localhost:27017/
 
@@ -25,4 +29,21 @@ mongosh --username root
 mongosh --username root admin
 mongosh --username root --password password admin
 mongosh --username root --password password --authenticationDatabase admin dbmovie
+
+# with a dedicated user
+mongosh --username umovie --password password dbmovie
+
+# with URL
+mongosh mongodb://root:password@localhost:27017/admin
+mongosh 'mongodb://root:password@localhost:27017/dbmovie?authSource=admin'
+```
+
+## Import data
+### Compass
+### CLI: mongoimport
+NB: for distant import add --uri
+```
+mongoimport --username=root --password=password --db=mdb \
+    --authenticationDatabase=admin \
+    --collection=titles --file=titles_all.json --jsonArray --type=json
 ```
