@@ -11,4 +11,18 @@
 ## Connection
 ### Compass
 URL = mongodb://root:password@localhost:27017/
+
 ### CLI: mongosh
+```
+docker compose exec -it mongo bash
+
+# with composition name:
+docker compose -p docker exec -it mongo bash
+
+# local connection
+mongosh
+mongosh --username root
+mongosh --username root admin
+mongosh --username root --password password admin
+mongosh --username root --password password --authenticationDatabase admin dbmovie
+```
