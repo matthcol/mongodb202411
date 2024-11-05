@@ -41,9 +41,15 @@ mongosh 'mongodb://root:password@localhost:27017/dbmovie?authSource=admin'
 ## Import data
 ### Compass
 ### CLI: mongoimport
+https://www.mongodb.com/docs/database-tools/mongoimport/
+
 NB: for distant import add --uri
 ```
 mongoimport --username=root --password=password --db=mdb \
     --authenticationDatabase=admin \
     --collection=titles --file=titles_all.json --jsonArray --type=json
+
+mongoimport -u=root -p=password -d=mdb \
+    --authenticationDatabase=admin \
+    -c=titles --file=titles_all.json --jsonArray --type=json
 ```

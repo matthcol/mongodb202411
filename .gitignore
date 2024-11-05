@@ -1,0 +1,4 @@
+*.pdf
+docker/scripts/*.json
+bigdata/
+draft.*
