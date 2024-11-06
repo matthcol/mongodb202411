@@ -1,0 +1,17 @@
+# Use root/password as user/password credentials
+services:
+
+  mongo:
+    image: mongo:${DB_VERSION:-latest}
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: ${DB_NAME:-dbmovie}
+    ports:
+      - ${DB_PORT:-27017}:27017
+    volumes:
+      - ./scripts/:/scripts
+
+
+

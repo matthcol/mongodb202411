@@ -1,0 +1,24 @@
+# *** DB Server ***
+
+# DB Version (default latest)
+#DB_TAG=8
+
+# DB Server port (default 27017)
+DB_PORT=27018
+
+# DB Database name (default dbmovie)
+#DB_DBNAME=dbmovie
+
+# DB Database root user (default root)
+#DB_ROOT_USER=root
+
+# DB Server root password (default password)
+#DB_ROOT_PASSWORD=password
+
+# ******* GUI DB CLIENT *****
+
+# GUI Version (default latest)
+# GUI_TAG=latest
+
+# GUI Web Port (default 8081)
+GUI_PORT=8082
