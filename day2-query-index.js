@@ -6,6 +6,7 @@
 // https://www.mongodb.com/docs/manual/reference/operator/query/text/
 // https://www.mongodb.com/docs/manual/reference/text-search-languages
 // https://www.mongodb.com/docs/manual/reference/operator/aggregation/meta
+// https://www.mongodb.com/docs/manual/core/indexes/index-types/index-text/specify-language-text-index/create-text-index-multiple-languages/
 
 
 db.names.insertOne({name: 'John Doe', imdbId: 'nm99999999'}) // ok
@@ -349,4 +350,248 @@ db.titles.aggregate([
 
 
   // by year: nb movies, min duration, max duration, ...
+  [
+    {
+      $match:
+        /**
+         * query: The query in MQL.
+         */
+        {
+          titleType: "movie",
+          startYear: {
+            $ne: null
+          }
+        }
+    },
+    {
+      $group: {
+        _id: "$startYear",
+        movieCount: {
+          $count: {}
+        },
+        minDuration: {
+          $min: "$runtimeMinutes"
+        },
+        maxDuration: {
+          $max: "$runtimeMinutes"
+        }
+      }
+    },
+    {
+      $sort:
+        /**
+         * Provide any number of field/order pairs.
+         */
+        {
+          _id: -1
+        }
+    }
+  ]
   // by director on a selected list (), nb movies, 1st year, last year, list of movies (title, year)
+  [
+    {
+      $group: {
+        _id: "$director.name",
+        nbMovies: {
+          $count: {}
+        },
+        firstYear: {
+          $min: "$year"
+        },
+        lastYear: {
+          $max: "$year"
+        },
+        movies: {
+          $addToSet: {
+            title: "$originalTitle",
+            year: "$year"
+          }
+        }
+      }
+    }
+  ]
+
+  // pipeline with $sample
+  // NB: see also $skip, $limit to to take an adjacent elements sample
+  [
+    {
+      $sample: {
+        size: 500000
+      }
+    },
+    {
+      $match: {
+        titleType: "movie",
+        director: {
+          $ne: null
+        },
+       }
+    },
+    {
+      $group: {
+        _id: {
+          directorImdbId: "$director.imdId",
+          directorName: "$director.name"
+        },
+        nbMovies: {
+          $count: {}
+        },
+        firstYear: {
+          $min: "$startYear"
+        },
+        lastYear: {
+          $max: "$startYear"
+        },
+        movies: {
+          $addToSet: {
+            title: "$originalTitle",
+            year: "$startYear"
+          }
+        }
+      }
+    }
+  ]
+
+  // group by composite key, producing arrays with $addToSet (no doubles) or $push (all elements)
+  [
+    // {
+    //   $sample: {
+    //     size: 500000
+    //   }
+    // }
+    {
+      $match: {
+        titleType: "movie",
+        // director: {
+        //   $ne: null
+        // },
+        "director.name": {
+          $in: [
+            "Steve McQueen",
+            "Ingmar Bergman",
+            "Clint Eastwood",
+            "Alfred Hitchcock"
+          ]
+        }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          directorImdbId: "$director.imdId",
+          directorName: "$director.name"
+        },
+        nbMovies: {
+          $count: {}
+        },
+        firstYear: {
+          $min: "$startYear"
+        },
+        lastYear: {
+          $max: "$startYear"
+        },
+        movies: {
+          // $addToSet: {
+          $push: {
+            title: "$originalTitle",
+            year: "$startYear"
+          }
+        }
+      }
+    }
+  ]
+
+  // filmography by actor
+  // use stage: unwind
+  [
+    {
+      $match: {
+        titleType: "movie",
+        cast: {
+          $ne: null
+        }
+      }
+    },
+    {
+      $unwind: {
+        path: "$cast"
+      }
+    },
+    {
+      $match: {
+        "cast.primaryName": {
+          $in: [
+            "Steve McQueen",
+            "Ingmar Bergman",
+            "Clint Eastwood",
+            "Alfred Hitchcock",
+            "Tom Cruise",
+            "Jean-Claude Van Damme"
+          ]
+        }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          actorImdbId: "$cast.imdbId",
+          actorName: "$cast.primaryName"
+        },
+        // wil be counted after this stage for multiple roles in the same movie
+        // nbMovies: {
+        //   $count: {}
+        // },
+        firstYear: {
+          $min: "$startYear"
+        },
+        lastYear: {
+          $max: "$startYear"
+        },
+        movies: {
+          $addToSet: {
+            // $push: {
+            title: "$originalTitle",
+            year: "$startYear"
+          }
+        }
+      }
+    },
+    {
+      $addFields: {
+        nbMovies: {
+          $size: "$movies"
+        }
+      }
+    },
+    {
+      $project: {
+        firstYear: 1,
+        lastYear: 1,
+        movies: {
+          $sortArray: {
+            input: "$movies",
+            sortBy: {
+              year: -1
+            }
+          }
+        },
+        nbMovies: 1
+      }
+    }
+  ]
+
+// bilan index: simple, compound, multi-key, sparse, wildcard-index
+//   - compound: {titleType: 1, startYear: 1, primaryTitle: 1}
+//          find: titleType, startYear, primaryTitle
+//          find: titleType, startYear
+//          find: titleType (*)
+//   - multi-key (array): { "cast.primaryName": 1 }
+db.titles.find({"cast.primaryName": "Clint Eastwood"})
+//   - sparse: not indexing null values (runtimeMinutes, ...)
+//   - wilcard-index: https://www.mongodb.com/docs/manual/core/indexes/index-types/index-wildcard/create-wildcard-index-single-field/
+//   - geospatial: GIS data
+//   - hashed: (cf tomorrow)
+//   - partial: with a query
+//          https://www.mongodb.com/docs/manual/core/index-partial/ 
+
+// query: join avec stage $lookup (cf tomorrow)
