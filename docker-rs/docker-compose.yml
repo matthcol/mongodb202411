@@ -1,0 +1,45 @@
+services:
+
+  mongors01:
+    container_name: mongors01
+    image: mongo:latest
+    command: mongod --port 27017 --replSet rs0 --bind_ip_all
+    restart: always
+    ports:
+      - 127.0.0.1:28017:27017
+    volumes:
+      - ./scripts/:/scripts
+      - mongors01_db:/data/db
+      - mongors01_cfg:/data/configdb
+
+  mongors02:
+    container_name: mongors02
+    image: mongo:latest
+    command: mongod --port 27017 --replSet rs0 --bind_ip_all
+    restart: always
+    ports:
+      - 127.0.0.1:28018:27017
+    volumes:
+      - ./scripts/:/scripts
+      - mongors02_db:/data/db
+      - mongors02_cfg:/data/configdb
+
+  mongors03:
+    container_name: mongors03
+    image: mongo:latest
+    command: mongod --port 27017 --replSet rs0 --bind_ip_all
+    restart: always
+    ports:
+      - 127.0.0.1:28019:27017
+    volumes:
+      - ./scripts/:/scripts
+      - mongors03_db:/data/db
+      - mongors03_cfg:/data/configdb
+
+volumes:
+  mongors01_db:
+  mongors01_cfg:
+  mongors02_db:
+  mongors02_cfg:
+  mongors03_db:
+  mongors03_cfg:
