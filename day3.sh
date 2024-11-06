@@ -26,3 +26,28 @@ mongodump --username=root --password=password  --authenticationDatabase=admin \
 
 mongodump --username=root --password=password  --authenticationDatabase=admin \
     --db=mdb --collection=titles --archive=backup/backup_titles_20241106.gz --gzip
+    
+
+# incident 1
+# perte/corruption collection
+# restore collection
+mongorestore --username=root --password=password  --authenticationDatabase=admin \
+    --nsInclude=mdb.titles backup/backup_20241106
+
+# NB: if some documents are invalid with a validation layer, you can use option: --bypassDocumentValidation.
+
+# incident 2: perte complete
+# remonter une base neuve et restore
+# 1. new docker mongodb
+docker compose -p mongo2 --env-file .env2 -f docker-compose2.yml up -d
+# 2. restore on new docker mongodb
+docker compose -p mongo2  exec -it mongo bash
+mongorestore --username=root --password=password  --authenticationDatabase=admin \
+    --nsFrom=mdb.titles --nsTo=dbmovie.titles \
+    --bypassDocumentValidation \
+    --archive=/scripts/backup/backup_titles_20241106.gz --gzip
+
+# NB: when failed, drop database
+use dbmovie
+db.dropDatabase()
+
